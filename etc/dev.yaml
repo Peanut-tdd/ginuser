@@ -1,0 +1,32 @@
+app:
+  name: "MyApplication"
+  version: "1.0.0"
+  env: "prod"
+  port: ":5001"
+  debug: true
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  timeout: 30
+
+database:
+  host: "localhost"
+  port: 3306
+  username: "root"
+  password: "123456"
+  charset: "utf8mb4"
+  dbname: "user"
+
+redis:
+  address: "localhost:6379"
+  password: ""
+  db: 0
+  poolSize: 20
+
+jwt:
+  secret: "abcdefg"
+  accessExpire: 30   #分钟
+  refreshExpire: 14
+
+

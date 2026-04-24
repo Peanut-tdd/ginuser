@@ -68,3 +68,24 @@ func TestRedis(t *testing.T) {
 		fmt.Println("name:", value)
 	}
 }
+
+func TestRedisBit(t *testing.T) {
+	day := time.Now().Format("2006-01-02")
+	key := fmt.Sprintf("sign:%s:%s", day, cast.ToString(1001))
+
+	err1 := config.RedisClient.SetBit(context.Background(), key, 0, 1).Err()
+	err2 := config.RedisClient.SetBit(context.Background(), key, 1, 1).Err()
+	err3 := config.RedisClient.SetBit(context.Background(), key, 2, 0).Err()
+	err4 := config.RedisClient.SetBit(context.Background(), key, 4, 1).Err()
+	if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
+		fmt.Println(err1, err2)
+	}
+
+	count, err5 := config.RedisClient.BitCount(context.Background(), key, nil).Result()
+	if err5 != nil {
+		fmt.Println(err5)
+	}
+
+	fmt.Println(count)
+
+}

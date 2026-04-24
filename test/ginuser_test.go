@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/redis/go-redis/v9"
+
 	"github.com/spf13/cast"
 )
 
@@ -88,4 +90,69 @@ func TestRedisBit(t *testing.T) {
 
 	fmt.Println(count)
 
+}
+
+func TestRedisPipelineSet(t *testing.T) {
+	data := map[string]interface{}{
+		"name": "tdd",
+		"age":  30,
+	}
+
+	pipe := config.RedisClient.Pipeline()
+
+	var keys []string
+
+	for k, val := range data {
+		fmt.Println(k, val)
+		//jsonVal, err := json.Marshal(val)
+		//if err != nil {
+		//	t.Fatalf("json marshal failed: %v", err)
+		//}
+		pipe.Set(context.Background(), k, val, time.Duration(10)*time.Minute)
+		keys = append(keys, k)
+	}
+
+	_, err := pipe.Exec(context.Background())
+	if err != nil {
+		fmt.Println("Pipeline Exec Error:", err)
+		t.Fail()
+	}
+	fmt.Println("redis pipe set success")
+
+}
+
+func TestRedisPipelineGet(t *testing.T) {
+	pipe := config.RedisClient.Pipeline()
+
+	keys := []string{"name", "age"}
+
+	var cmds []*redis.StringCmd
+
+	for _, key := range keys {
+		cmd := pipe.Get(context.Background(), key)
+		cmds = append(cmds, cmd)
+	}
+
+	_, err := pipe.Exec(context.Background())
+	if err != nil {
+		fmt.Println("Pipeline Exec Error:", err)
+	}
+
+	var result []interface{}
+	for _, cmd := range cmds {
+
+		val, err := cmd.Result()
+		if err != nil {
+			if err == redis.Nil {
+				fmt.Println("key not found")
+				continue
+			}
+		}
+		fmt.Println(cmd.Args()[1], cmd.Val())
+
+		result = append(result, val)
+
+	}
+
+	fmt.Println(result)
 }

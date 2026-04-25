@@ -12,6 +12,12 @@
 - jwt认证
 - jaeger链路追踪
 - zap日志
+- docker部署
+
+
+
+
+
 
 
 

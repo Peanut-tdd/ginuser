@@ -1,0 +1,116 @@
+version: '3.8'
+
+networks:
+  app-tier:
+    driver: bridge
+
+services:
+  Etcd:
+    image: 'bitnami/etcd:latest'
+    container_name: etcd
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+      - ETCD_ADVERTISE_CLIENT_URLS=http://127.0.0.1:2379
+      # - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+    ports:
+      - 2379:2379
+      - 2380:2380
+    networks:
+      - app-tier
+
+
+  Mysql:
+    image: 'bitnami/mysql:latest'
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+    volumes:
+      - /Users/tdd/docker/mysql/log:/var/log/mysql # 映射日志目录，宿主机:容器
+      - /Users/tdd/docker/mysql/data:/var/lib/mysql # 映射数据目录，宿主机:容器
+      - /Users/tdd/docker/mysql/conf.d:/etc/mysql/conf.d # 映射配置目录，宿主机:容器
+      - /etc/localtime:/etc/localtime:ro #
+    ports:
+      - 3306:3306
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 5s
+      timeout: 20s
+      retries: 10
+    restart: always
+    networks:
+      - app-tier
+
+  Redis:
+    image: 'redis:latest'
+    container_name: redis
+    volumes:
+      - /Users/tdd/docker/redis/data:/data
+      - /Users/tdd/docker/redis/redis.conf:/etc/redis/redis.conf
+      - /etc/localtime:/etc/localtime:ro
+    # 以配置文件的方式启动 redis.conf
+    command: redis-server /etc/redis/redis.conf
+    ports:
+      - 6379:6379
+    restart: always
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-tier
+
+  Prometheus:
+    image: 'prom/prometheus:latest'
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - /Users/tdd/docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - app-tier
+
+
+  Grafana:
+    image: grafana/grafana
+    container_name: grafana
+    hostname: grafana
+    restart: always
+    ports:
+      - '3000:3000'
+    networks:
+      - app-tier
+
+
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.50
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+      - "6831:6831/udp"
+      - "14268:14268"
+      - "4317:4317"
+      - "4318:4318"
+    restart: always
+    networks:
+      - app-tier
+
+  app:
+    build:
+      context: .
+      dockerfile: ops/Dockerfile
+    container_name: app_gin_user
+    restart: always
+    environment:
+      - GIN_MODE=release
+      - TZ=Asia/Shanghai
+    depends_on:
+      Mysql:
+        condition: service_healthy
+      Redis:
+        condition: service_healthy
+    ports:
+      - "5001:5001"
+    networks:
+      - app-tier

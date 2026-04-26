@@ -17,14 +17,6 @@
 
 
 
-
-
-
-
-
-
-
-
 ## 目录结构
 ```aiignore
 .
@@ -81,4 +73,20 @@
 └── types
     └── user.go
 
+```
+
+
+
+## docker容器运行
+```aiignore
+docker compose up -d 
+```
+
+
+
+
+## 本地运行
+```aiignore
+1.注释docker-compose.yaml 文件的app容器
+2.修改etc目录配置文件的mysql，redis host为localhost
 ```

@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/jaeger"
@@ -18,8 +20,14 @@ const (
 var Tracer = otel.Tracer(Service)
 
 func TracerProvider() (*tracesdk.TracerProvider, error) {
+	// 获取 Jaeger 采集器地址，容器环境下应为 http://jaeger:14268/api/traces
+	url := os.Getenv("JAEGER_ENDPOINT")
+	if url == "" {
+		url = "http://localhost:14268/api/traces"
+	}
+
 	// Create the Jaeger exporter
-	exp, err := jaeger.New(jaeger.WithCollectorEndpoint())
+	exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(url)))
 	if err != nil {
 		return nil, err
 	}

@@ -17,11 +17,10 @@ func NewRouter() *gin.Engine {
 	r.Use(middleware.RequestTraceLog())
 
 	// 应用Prometheus中间件到所有路由
-	//r.Use(middleware.PrometheusMiddleware())
+	r.Use(middleware.PrometheusMiddleware())
 
 	// 暴露指标端点
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
-	//http.Handle("/metrics", promhttp.Handler())
 
 	v1 := r.Group("/api/v1")
 	{
